@@ -1,1 +1,1227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Future Technology – GHG & Sustainability Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy:   #262626;
+    --green:  #769500;
+    --gold:   #C2551F;
+    --orange: #C2551F;
+    --red:    #C2551F;
+    --lgray:  #F5F2EE;
+    --mgray:  #D9C8B4;
+    --white:  #FFFFFF;
+    --lgreen: #EAF0D0;
+    --lgold:  #FDEEE4;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Proxima Nova', 'Nunito', 'Calibri', 'Segoe UI', sans-serif;
+    background: #f0f2f5;
+    color: #1a1a2e;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    background: linear-gradient(135deg, #262626 0%, #3a3a3a 100%);
+    color: white;
+    padding: 32px 48px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  }
+  .header-left h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+  }
+  .header-left p {
+    font-size: 1rem;
+    opacity: 0.8;
+    margin-top: 4px;
+  }
+  .header-badge {
+    background: #C2551F;
+    color: #FFFFFF;
+    padding: 8px 20px;
+    border-radius: 24px;
+    font-weight: 700;
+    font-size: 0.9rem;
+  }
+
+  /* ── NAV TABS ── */
+  .nav-tabs {
+    background: #262626;
+    display: flex;
+    padding: 0 48px;
+    gap: 4px;
+    border-bottom: 3px solid #C2551F;
+  }
+  .nav-tab {
+    padding: 14px 24px;
+    color: rgba(255,255,255,0.7);
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 600;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -3px;
+    transition: all 0.2s;
+  }
+  .nav-tab:hover { color: white; }
+  .nav-tab.active {
+    color: #C2551F;
+    border-bottom-color: #C2551F;
+  }
+
+  /* ── MAIN CONTENT ── */
+  .page { display: none; padding: 32px 48px; }
+  .page.active { display: block; }
+
+  /* ── KPI CARDS ── */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+  .kpi-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    border-top: 4px solid #262626;
+    transition: transform 0.2s;
+  }
+  .kpi-card:hover { transform: translateY(-2px); }
+  .kpi-card.green { border-top-color: var(--green); }
+  .kpi-card.gold  { border-top-color: var(--gold); }
+  .kpi-card.red   { border-top-color: var(--red); }
+  .kpi-label { font-size: 0.8rem; color: #666; text-transform: uppercase; letter-spacing: 0.5px; }
+  .kpi-value { font-size: 1.8rem; font-weight: 700; color: var(--navy); margin: 6px 0; }
+  .kpi-sub   { font-size: 0.85rem; color: #888; }
+  .kpi-change { font-size: 0.85rem; font-weight: 700; margin-top: 4px; }
+  .kpi-change.up   { color: var(--red); }
+  .kpi-change.down { color: var(--green); }
+
+  /* ── SECTION HEADERS ── */
+  .section-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--navy);
+    margin: 28px 0 16px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--mgray);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-title::before {
+    content: '';
+    width: 4px;
+    height: 20px;
+    background: #C2551F;
+    border-radius: 2px;
+    display: inline-block;
+  }
+
+  /* ── CHART GRID ── */
+  .chart-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 24px;
+  }
+  .chart-grid-3 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 24px;
+  }
+  .chart-full { margin-bottom: 24px; }
+
+  .chart-card {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  }
+  .chart-card h3 {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--navy);
+    margin-bottom: 16px;
+    text-align: center;
+  }
+  .chart-container { position: relative; }
+
+  /* ── DATA TABLE ── */
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    margin-bottom: 24px;
+  }
+  .data-table th {
+    background: #262626;
+    color: white;
+    padding: 12px 16px;
+    text-align: right;
+    font-size: 0.9rem;
+  }
+  .data-table th:first-child { text-align: left; }
+  .data-table td {
+    padding: 11px 16px;
+    text-align: right;
+    font-size: 0.9rem;
+    border-bottom: 1px solid var(--lgray);
+  }
+  .data-table td:first-child { text-align: left; font-weight: 600; }
+  .data-table tr:nth-child(even) td { background: var(--lgray); }
+  .data-table tr.total td {
+    background: #C2551F;
+    color: #FFFFFF;
+    font-weight: 700;
+  }
+  .data-table tr.scope1 td { background: #EBF5FF; }
+  .data-table tr.scope2 td { background: #F0FFF4; }
+  .data-table tr.scope3 td { background: #FFF9E6; }
+
+  /* ── INSTRUCTIONS PAGE ── */
+  .instructions-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-bottom: 24px;
+  }
+  .instruction-card {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  }
+  .instruction-card h3 {
+    color: var(--navy);
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .step-num {
+    background: #262626;
+    color: #C2551F;
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+  }
+  .instruction-card ol { padding-left: 0; list-style: none; }
+  .instruction-card ol li {
+    padding: 8px 0;
+    border-bottom: 1px solid var(--lgray);
+    font-size: 0.9rem;
+    line-height: 1.5;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  .instruction-card ol li:last-child { border-bottom: none; }
+  .code-block {
+    background: #262626;
+    color: #C2551F;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.85rem;
+    margin: 8px 0;
+  }
+  .alert-box {
+    background: var(--lgold);
+    border-left: 4px solid var(--gold);
+    padding: 12px 16px;
+    border-radius: 0 8px 8px 0;
+    font-size: 0.9rem;
+    margin: 8px 0;
+  }
+  .alert-box.green {
+    background: var(--lgreen);
+    border-left-color: var(--green);
+  }
+
+  /* ── DATA EDIT PANEL ── */
+  .data-edit-section {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    margin-bottom: 24px;
+  }
+  .data-edit-section h3 {
+    color: var(--navy);
+    font-weight: 700;
+    margin-bottom: 16px;
+  }
+  .year-input-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .year-col { text-align: center; }
+  .year-col label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--navy);
+    margin-bottom: 4px;
+  }
+  .year-col input {
+    width: 100%;
+    padding: 8px;
+    border: 2px solid var(--mgray);
+    border-radius: 6px;
+    text-align: center;
+    font-size: 0.9rem;
+    transition: border-color 0.2s;
+  }
+  .year-col input:focus {
+    outline: none;
+    border-color: var(--navy);
+    background: #EBF5FF;
+  }
+  .year-col input.has-data { background: #FFF9C4; border-color: var(--gold); }
+  .update-btn {
+    background: #262626;
+    color: white;
+    border: none;
+    padding: 12px 28px;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s;
+    margin-top: 12px;
+  }
+  .update-btn:hover { background: #3a3a3a; }
+  .update-btn.green { background: var(--green); }
+  .update-btn.green:hover { background: #145c30; }
+
+  /* ── FOOTER ── */
+  .footer {
+    background: #262626;
+    color: rgba(255,255,255,0.6);
+    text-align: center;
+    padding: 20px;
+    font-size: 0.8rem;
+    margin-top: 40px;
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 900px) {
+    .chart-grid-2, .chart-grid-3, .instructions-grid { grid-template-columns: 1fr; }
+    .header { flex-direction: column; gap: 12px; text-align: center; }
+    .nav-tabs { padding: 0 16px; overflow-x: auto; }
+    .page { padding: 20px 16px; }
+    .year-input-grid { grid-template-columns: repeat(3, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-left">
+    <h1>Future Technology — GHG & Sustainability Dashboard</h1>
+    <p>Tempe, Arizona &nbsp;|&nbsp; Reporting Years 2024–2025 &nbsp;|&nbsp; Data Source: Jay Golden VP Operations, April 2026 &nbsp;|&nbsp; Dynamic Sustainability Lab @ Syracuse University</p>
+  </div>
+  <div class="header-badge">📊 Interactive Dashboard</div>
+</div>
+
+<!-- NAV TABS -->
+<div class="nav-tabs">
+  <div class="nav-tab active" onclick="showPage('overview')">Overview</div>
+  <div class="nav-tab" onclick="showPage('scope1')">Scope 1</div>
+  <div class="nav-tab" onclick="showPage('scope2')">Scope 2</div>
+  <div class="nav-tab" onclick="showPage('scope3')">Scope 3</div>
+  <div class="nav-tab" onclick="showPage('intensity')">Intensity</div>
+  <div class="nav-tab" onclick="showPage('netzero')">Net Zero</div>
+  <div class="nav-tab" onclick="showPage('update')">Update Data</div>
+  <div class="nav-tab" onclick="showPage('instructions')">Instructions</div>
+</div>
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- PAGE: OVERVIEW                                 -->
+<!-- ══════════════════════════════════════════════ -->
+<div id="page-overview" class="page active">
+
+  <!-- KPI Cards -->
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-label">Total GHG 2024</div>
+      <div class="kpi-value" id="kpi-total-2024">11,892</div>
+      <div class="kpi-sub">tCO2e</div>
+    </div>
+    <div class="kpi-card green">
+      <div class="kpi-label">Total GHG 2025</div>
+      <div class="kpi-value" id="kpi-total-2025">13,623</div>
+      <div class="kpi-sub">tCO2e</div>
+      <div class="kpi-change up" id="kpi-yoy">▲ +7.2% vs 2024</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Scope 1 – 2025</div>
+      <div class="kpi-value" id="kpi-s1">7,452</div>
+      <div class="kpi-sub">tCO2e · 76.1% of total</div>
+    </div>
+    <div class="kpi-card gold">
+      <div class="kpi-label">GHG / $M Revenue</div>
+      <div class="kpi-value" id="kpi-intensity-rev">37.8</div>
+      <div class="kpi-sub">tCO2e/$M · 2025</div>
+      <div class="kpi-change down">▼ -11.0% vs 2024</div>
+    </div>
+    <div class="kpi-card green">
+      <div class="kpi-label">GHG / M Units</div>
+      <div class="kpi-value" id="kpi-intensity-units">2,197</div>
+      <div class="kpi-sub">tCO2e/M Digitizers · 2025</div>
+      <div class="kpi-change down">▼ -53.8% vs 2024</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Carbon Credits Retired</div>
+      <div class="kpi-value">20</div>
+      <div class="kpi-sub">tCO2e · 2025 (0 in 2024)</div>
+    </div>
+    <div class="kpi-card gold">
+      <div class="kpi-label">RECs Purchased</div>
+      <div class="kpi-value">8</div>
+      <div class="kpi-sub">MWh · 2025 (5 in 2024)</div>
+    </div>
+  </div>
+
+  <!-- Total GHG by Year -->
+  <div class="section-title">Total GHG Emissions by Year</div>
+  <div class="chart-grid-2">
+    <div class="chart-card">
+      <h3>Total GHG Emissions (tCO2e)</h3>
+      <div class="chart-container" style="height:280px">
+        <canvas id="chart-total-ghg"></canvas>
+      </div>
+    </div>
+    <div class="chart-card">
+      <h3>GHG by Scope — 2024 vs 2025</h3>
+      <div class="chart-container" style="height:280px">
+        <canvas id="chart-scope-comparison"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pie breakdowns -->
+  <div class="section-title">Scope Breakdown by Year</div>
+  <div class="chart-grid-2">
+    <div class="chart-card">
+      <h3>2024 GHG by Scope</h3>
+      <div class="chart-container" style="height:280px">
+        <canvas id="chart-pie-2024"></canvas>
+      </div>
+    </div>
+    <div class="chart-card">
+      <h3>2025 GHG by Scope</h3>
+      <div class="chart-container" style="height:280px">
+        <canvas id="chart-pie-2025"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Summary Table -->
+  <div class="section-title">GHG Summary Table</div>
+  <table class="data-table" id="summary-table">
+    <thead>
+      <tr>
+        <th>Scope</th>
+        <th>2024 (tCO2e)</th>
+        <th>2025 (tCO2e)</th>
+        <th>YoY Change</th>
+        <th>YoY %</th>
+      </tr>
+    </thead>
+    <tbody id="summary-tbody"></tbody>
+  </table>
+</div>
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- PAGE: SCOPE 1                                  -->
+<!-- ══════════════════════════════════════════════ -->
+<div id="page-scope1" class="page">
+  <div class="section-title">Scope 1 – Direct Emissions</div>
+  <div class="chart-grid-2">
+    <div class="chart-card">
+      <h3>Scope 1 by Category (tCO2e)</h3>
+      <div class="chart-container" style="height:300px">
+        <canvas id="chart-s1-categories"></canvas>
+      </div>
+    </div>
+    <div class="chart-card">
+      <h3>Scope 1 Category Breakdown 2025</h3>
+      <div class="chart-container" style="height:300px">
+        <canvas id="chart-s1-pie"></canvas>
+      </div>
+    </div>
+  </div>
+  <div class="section-title">Scope 1 Data</div>
+  <table class="data-table">
+    <thead>
+      <tr><th>Category</th><th>Unit</th><th>2024 Input</th><th>2025 Input</th><th>2024 tCO2e</th><th>2025 tCO2e</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Natural Gas – HQ</td><td>mmBTU</td><td>1,800</td><td>1,500</td><td>94.86</td><td>79.05</td></tr>
+      <tr><td>Natural Gas – Fab Plant</td><td>mmBTU</td><td>10.4</td><td>11.3</td><td>0.548</td><td>0.596</td></tr>
+      <tr><td>Natural Gas – Warehouse</td><td>mmBTU</td><td>2,680</td><td>2,000</td><td>141.24</td><td>105.40</td></tr>
+      <tr><td>Equipment (LPG/Diesel/Gas)</td><td>gallons</td><td>~16,070</td><td>16,070</td><td>94.71</td><td>94.71</td></tr>
+      <tr><td>Company Vehicles</td><td>miles</td><td>52,412</td><td>120,676</td><td>15.95</td><td>56.57</td></tr>
+      <tr><td>Refrigerants – R404A</td><td>lbs</td><td>4,000</td><td>4,000</td><td>7,116</td><td>7,116</td></tr>
+      <tr class="total"><td>SCOPE 1 TOTAL</td><td></td><td></td><td></td><td>7,463</td><td>7,452</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- PAGE: SCOPE 2                                  -->
+<!-- ══════════════════════════════════════════════ -->
+<div id="page-scope2" class="page">
+  <div class="section-title">Scope 2 – Energy Indirect Emissions</div>
+  <div class="chart-grid-2">
+    <div class="chart-card">
+      <h3>Scope 2 by Facility — 2024</h3>
+      <div class="chart-container" style="height:300px">
+        <canvas id="chart-s2-pie-2024"></canvas>
+      </div>
+    </div>
+    <div class="chart-card">
+      <h3>Scope 2 by Facility — 2025</h3>
+      <div class="chart-container" style="height:300px">
+        <canvas id="chart-s2-pie-2025"></canvas>
+      </div>
+    </div>
+  </div>
+  <div class="chart-grid-2">
+    <div class="chart-card">
+      <h3>Electricity Consumption by Facility (MWh)</h3>
+      <div class="chart-container" style="height:280px">
+        <canvas id="chart-electricity"></canvas>
+      </div>
+    </div>
+    <div class="chart-card">
+      <h3>Scope 2 Location vs Market (tCO2e)</h3>
+      <div class="chart-container" style="height:280px">
+        <canvas id="chart-s2-loc-mkt"></canvas>
+      </div>
+    </div>
+  </div>
+  <div class="section-title">Scope 2 Data</div>
+  <table class="data-table">
+    <thead>
+      <tr><th>Facility</th><th>2024 kWh</th><th>2025 kWh</th><th>2024 tCO2e (Loc)</th><th>2025 tCO2e (Loc)</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>HQ (125,000 sqft)</td><td>280,000</td><td>256,000</td><td>108.08</td><td>98.82</td></tr>
+      <tr><td>Fab Plant</td><td>767,000</td><td>982,000</td><td>296.06</td><td>379.05</td></tr>
+      <tr><td>Warehouse (200,000 sqft)</td><td>78,000</td><td>67,000</td><td>30.11</td><td>25.86</td></tr>
+      <tr><td>Purchased Steam – Fab</td><td>5,000 mmBTU</td><td>7,000 mmBTU</td><td>298.00</td><td>417.20</td></tr>
+      <tr class="total"><td>SCOPE 2 TOTAL (Location)</td><td>1,125,000</td><td>1,305,000</td><td>732.25</td><td>920.93</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- PAGE: SCOPE 3                                  -->
+<!-- ══════════════════════════════════════════════ -->
+<div id="page-scope3" class="page">
+  <div class="section-title">Scope 3 – Value Chain Emissions</div>
+  <div class="chart-grid-2">
+    <div class="chart-card">
+      <h3>Scope 3 by Category — 2024</h3>
+      <div class="chart-container" style="height:300px">
+        <canvas id="chart-s3-pie-2024"></canvas>
+      </div>
+    </div>
+    <div class="chart-card">
+      <h3>Scope 3 by Category — 2025</h3>
+      <div class="chart-container" style="height:300px">
+        <canvas id="chart-s3-pie-2025"></canvas>
+      </div>
+    </div>
+  </div>
+  <div class="chart-full">
+    <div class="chart-card">
+      <h3>Scope 3 Categories — 2024 vs 2025 (tCO2e)</h3>
+      <div class="chart-container" style="height:300px">
+        <canvas id="chart-s3-bar"></canvas>
+      </div>
+    </div>
+  </div>
+  <div class="section-title">Scope 3 Data</div>
+  <table class="data-table">
+    <thead>
+      <tr><th>Category</th><th>Description</th><th>2024 tCO2e</th><th>2025 tCO2e</th><th>YoY %</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Cat 4</td><td>Upstream Transport (Truck, Rail, Marine)</td><td>2,803</td><td>4,491</td><td>+60.2%</td></tr>
+      <tr><td>Cat 5</td><td>Waste in Operations</td><td>270</td><td>260</td><td>-3.7%</td></tr>
+      <tr><td>Cat 6</td><td>Business Travel (Air, Rail, Uber)</td><td>38</td><td>51</td><td>+33.4%</td></tr>
+      <tr><td>Cat 7</td><td>Employee Commuting</td><td>585</td><td>447</td><td>-23.5%</td></tr>
+      <tr><td>Cats 1-3, 8-15</td><td>Other categories (data not yet collected)</td><td>—</td><td>—</td><td>—</td></tr>
+      <tr class="total"><td>SCOPE 3 TOTAL</td><td>(Populated categories only)</td><td>3,696</td><td>5,249</td><td>+42.0%</td></tr>
+    </tbody>
+  </table>
+  <div class="alert-box" style="margin-top:16px">
+    ⚠️ Scope 3 currently covers Categories 4, 5, 6 and 7 only. Categories 1–3 and 8–15 require additional data collection. Under CSRD all material categories must be reported.
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- PAGE: INTENSITY                                -->
+<!-- ══════════════════════════════════════════════ -->
+<div id="page-intensity" class="page">
+  <div class="section-title">GHG Intensity Metrics</div>
+  <div class="kpi-grid">
+    <div class="kpi-card green">
+      <div class="kpi-label">GHG / $M Revenue 2024</div>
+      <div class="kpi-value">42.5</div>
+      <div class="kpi-sub">tCO2e per $M revenue</div>
+    </div>
+    <div class="kpi-card green">
+      <div class="kpi-label">GHG / $M Revenue 2025</div>
+      <div class="kpi-value">37.8</div>
+      <div class="kpi-sub">tCO2e per $M revenue</div>
+      <div class="kpi-change down">▼ -11.0% improvement</div>
+    </div>
+    <div class="kpi-card green">
+      <div class="kpi-label">GHG / M Units 2024</div>
+      <div class="kpi-value">4,757</div>
+      <div class="kpi-sub">tCO2e per M Digitizers</div>
+    </div>
+    <div class="kpi-card green">
+      <div class="kpi-label">GHG / M Units 2025</div>
+      <div class="kpi-value">2,197</div>
+      <div class="kpi-sub">tCO2e per M Digitizers</div>
+      <div class="kpi-change down">▼ -53.8% improvement</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">GHG / FTE 2024</div>
+      <div class="kpi-value">47.6</div>
+      <div class="kpi-sub">tCO2e per employee</div>
+    </div>
+    <div class="kpi-card green">
+      <div class="kpi-label">GHG / FTE 2025</div>
+      <div class="kpi-value">47.0</div>
+      <div class="kpi-sub">tCO2e per employee</div>
+      <div class="kpi-change down">▼ -1.2% improvement</div>
+    </div>
+  </div>
+  <div class="chart-grid-3">
+    <div class="chart-card">
+      <h3>GHG per $M Revenue</h3>
+      <div class="chart-container" style="height:260px">
+        <canvas id="chart-int-rev"></canvas>
+      </div>
+    </div>
+    <div class="chart-card">
+      <h3>GHG per Million Units</h3>
+      <div class="chart-container" style="height:260px">
+        <canvas id="chart-int-units"></canvas>
+      </div>
+    </div>
+    <div class="chart-card">
+      <h3>GHG per FTE</h3>
+      <div class="chart-container" style="height:260px">
+        <canvas id="chart-int-fte"></canvas>
+      </div>
+    </div>
+  </div>
+  <div class="alert-box green">
+    ✅ Despite total GHG rising 7.2%, all three intensity metrics improved in 2025. This reflects the significant scale-up in production (from 2.5M to 6.2M Digitizers) and revenue growth ($280M to $360M), meaning Future Technology is producing more with a lower carbon footprint per unit.
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- PAGE: NET ZERO                                 -->
+<!-- ══════════════════════════════════════════════ -->
+<div id="page-netzero" class="page">
+  <div class="section-title">Net Zero Pathway – Linear Reduction to 2050</div>
+  <div class="chart-full">
+    <div class="chart-card">
+      <h3>GHG Emissions vs Net Zero Target Pathway (tCO2e)</h3>
+      <div class="chart-container" style="height:380px">
+        <canvas id="chart-netzero"></canvas>
+      </div>
+    </div>
+  </div>
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-label">Base Year (2024)</div>
+      <div class="kpi-value">11,892</div>
+      <div class="kpi-sub">tCO2e – starting point</div>
+    </div>
+    <div class="kpi-card red">
+      <div class="kpi-label">2025 vs Target</div>
+      <div class="kpi-value">Off Track</div>
+      <div class="kpi-sub">13,623 actual vs 11,447 required</div>
+    </div>
+    <div class="kpi-card gold">
+      <div class="kpi-label">Required by 2030</div>
+      <div class="kpi-value">17,153</div>
+      <div class="kpi-sub">tCO2e — 50% S1+2 reduction</div>
+    </div>
+    <div class="kpi-card green">
+      <div class="kpi-label">Net Zero Target Year</div>
+      <div class="kpi-value">2050</div>
+      <div class="kpi-sub">26 years to achieve</div>
+    </div>
+  </div>
+  <div class="alert-box">
+    ⚠️ Future Technology is currently <strong>off track</strong> for its net zero pathway. The 2025 actual emissions (25,747 tCO2e) exceed the required trajectory (23,091 tCO2e) by 2,176 tCO2e. The primary driver is increased Scope 3 transport emissions from production scale-up. Immediate action on Scope 1 refrigerant substitution (R404A = 19,240 tCO2e) would have the largest impact.
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- PAGE: UPDATE DATA                              -->
+<!-- ══════════════════════════════════════════════ -->
+<div id="page-update" class="page">
+  <div class="section-title">Update Dashboard Data for Future Years</div>
+  <div class="alert-box green">
+    ✅ Enter new year data below and click "Update Charts" to refresh all visualisations instantly. Data entered here updates the HTML dashboard only — also update the Excel file separately.
+  </div>
+
+  <div class="data-edit-section" style="margin-top:20px">
+    <h3>Total GHG by Scope (tCO2e)</h3>
+    <p style="font-size:0.85rem;color:#666;margin-bottom:12px">Enter totals for each scope per year. Leave blank for years without data.</p>
+
+    <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:0.9rem">
+        <thead>
+          <tr>
+            <th style="background:var(--navy);color:white;padding:10px;text-align:left">Scope</th>
+            <th style="background:var(--navy);color:white;padding:10px;text-align:center">2024</th>
+            <th style="background:var(--navy);color:white;padding:10px;text-align:center">2025</th>
+            <th style="background:var(--navy);color:white;padding:10px;text-align:center">2026</th>
+            <th style="background:var(--navy);color:white;padding:10px;text-align:center">2027</th>
+            <th style="background:var(--navy);color:white;padding:10px;text-align:center">2028</th>
+            <th style="background:var(--navy);color:white;padding:10px;text-align:center">2029</th>
+            <th style="background:var(--navy);color:white;padding:10px;text-align:center">2030</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="padding:8px;font-weight:600;background:#EBF5FF">Scope 1</td>
+            <td style="padding:4px"><input type="number" id="inp-s1-2024" value="7463.269" class="has-data" style="width:100%;padding:6px;border:1px solid #ccc;border-radius:4px;text-align:center"></td>
+            <td style="padding:4px"><input type="number" id="inp-s1-2025" value="7452.292" class="has-data" style="width:100%;padding:6px;border:1px solid #ccc;border-radius:4px;text-align:center"></td>
+            <td style="padding:4px"><input type="number" id="inp-s1-2026" placeholder="—" style="width:100%;padding:6px;border:1px solid #ccc;border-radius:4px;text-align:center"></td>
+            <td style="padding:4px"><input type="number" id="inp-s1-2027" placeholder="—" style="width:100%;padding:6px;border:1px solid #ccc;border-radius:4px;text-align:center"></td>
+            <td style="padding:4px"><input type="number" id="inp-s1-2028" placeholder="—" style="width:100%;padding:6px;border:1px solid #ccc;border-radius:4px;text-align:center"></td>
+            <td style="padding:4px"><input type="number" id="inp-s1-2029" placeholder="—" style="width:100%;padding:6px;border:1px solid #ccc;border-radius:4px;text-align:center"></td>
+            <td style="padding:4px"><input type="number" id="inp-s1-2030" placeholder="—" style="width:100%;padding:6px;border:1px solid #ccc;border-radius:4px;text-align:center"></td>
+          </tr>
+          <tr>
+            <td style="padding:8px;font-weight:600;background:#F0FFF4">Scope 2</td>
+            <td style="padding:4px"><input type="number" id="inp-s2-2024" value="732.250" class="has-data" style="width:100%;padding:6px;border:1px solid #ccc;border-radius:4px;text-align:center"></td>
+            <td style="padding:4px"><input type="number" id="inp-s2-2025" value="920.930" class="has-data" style="width:100%;padding:6px;border:1px solid #ccc;border-radius:4px;text-align:center"></td>
+            <td style="padding:4px"><input type="number" id="inp-s2-2026" placeholder="—" style="width:100%;padding:6px;border:1px solid #ccc;border-radius:4px;text-align:center"></td>
+            <td style="padding:4px"><input type="number" id="inp-s2-2027" placeholder="—" style="width:100%;padding:6px;border:1px solid #ccc;border-radius:4px;text-align:center"></td>
+            <td style="padding:4px"><input type="number" id="inp-s2-2028" placeholder="—" style="width:100%;padding:6px;border:1px solid #ccc;border-radius:4px;text-align:center"></td>
+            <td style="padding:4px"><input type="number" id="inp-s2-2029" placeholder="—" style="width:100%;padding:6px;border:1px solid #ccc;border-radius:4px;text-align:center"></td>
+            <td style="padding:4px"><input type="number" id="inp-s2-2030" placeholder="—" style="width:100%;padding:6px;border:1px solid #ccc;border-radius:4px;text-align:center"></td>
+          </tr>
+          <tr>
+            <td style="padding:8px;font-weight:600;background:#FFF9E6">Scope 3</td>
+            <td style="padding:4px"><input type="number" id="inp-s3-2024" value="3696.038" class="has-data" style="width:100%;padding:6px;border:1px solid #ccc;border-radius:4px;text-align:center"></td>
+            <td style="padding:4px"><input type="number" id="inp-s3-2025" value="5249.479" class="has-data" style="width:100%;padding:6px;border:1px solid #ccc;border-radius:4px;text-align:center"></td>
+            <td style="padding:4px"><input type="number" id="inp-s3-2026" placeholder="—" style="width:100%;padding:6px;border:1px solid #ccc;border-radius:4px;text-align:center"></td>
+            <td style="padding:4px"><input type="number" id="inp-s3-2027" placeholder="—" style="width:100%;padding:6px;border:1px solid #ccc;border-radius:4px;text-align:center"></td>
+            <td style="padding:4px"><input type="number" id="inp-s3-2028" placeholder="—" style="width:100%;padding:6px;border:1px solid #ccc;border-radius:4px;text-align:center"></td>
+            <td style="padding:4px"><input type="number" id="inp-s3-2029" placeholder="—" style="width:100%;padding:6px;border:1px solid #ccc;border-radius:4px;text-align:center"></td>
+            <td style="padding:4px"><input type="number" id="inp-s3-2030" placeholder="—" style="width:100%;padding:6px;border:1px solid #ccc;border-radius:4px;text-align:center"></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <button class="update-btn green" onclick="updateAllCharts()" style="margin-top:16px">🔄 Update All Charts</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- PAGE: INSTRUCTIONS                             -->
+<!-- ══════════════════════════════════════════════ -->
+<div id="page-instructions" class="page">
+  <div class="section-title">How to Use This Dashboard</div>
+
+  <div class="instructions-grid">
+    <div class="instruction-card">
+      <h3><span class="step-num">1</span> Opening the Dashboard</h3>
+      <ol>
+        <li><span class="step-num" style="background:var(--mgray);color:var(--navy)">→</span> Double-click <strong>FutureTechnology_GHG_Dashboard.html</strong> to open in your browser</li>
+        <li><span class="step-num" style="background:var(--mgray);color:var(--navy)">→</span> Works in Chrome, Firefox, Edge, or Safari — no installation needed</li>
+        <li><span class="step-num" style="background:var(--mgray);color:var(--navy)">→</span> Use the tabs at the top to navigate between sections</li>
+        <li><span class="step-num" style="background:var(--mgray);color:var(--navy)">→</span> Hover over any chart element to see exact values</li>
+        <li><span class="step-num" style="background:var(--mgray);color:var(--navy)">→</span> Click legend items to show or hide individual data series</li>
+      </ol>
+    </div>
+
+    <div class="instruction-card">
+      <h3><span class="step-num">2</span> Updating Charts with New Year Data</h3>
+      <ol>
+        <li><span class="step-num" style="background:var(--mgray);color:var(--navy)">→</span> Go to the <strong>Update Data</strong> tab</li>
+        <li><span class="step-num" style="background:var(--mgray);color:var(--navy)">→</span> Enter your Scope 1, 2 and 3 totals for the new year (e.g. 2026) in the input table</li>
+        <li><span class="step-num" style="background:var(--mgray);color:var(--navy)">→</span> Click <strong>"Update All Charts"</strong></li>
+        <li><span class="step-num" style="background:var(--mgray);color:var(--navy)">→</span> All charts across every tab update instantly</li>
+        <li><span class="step-num" style="background:var(--mgray);color:var(--navy)">→</span> Note: data entered here is not saved when you close the browser — see Step 4 to make permanent updates</li>
+      </ol>
+    </div>
+
+    <div class="instruction-card">
+      <h3><span class="step-num">3</span> Updating the Excel File</h3>
+      <ol>
+        <li><span class="step-num" style="background:var(--mgray);color:var(--navy)">→</span> Open <strong>FutureTechnology_Sustainability_Dashboard.xlsx</strong></li>
+        <li><span class="step-num" style="background:var(--mgray);color:var(--navy)">→</span> Navigate to the relevant scope sheet (Scope 1, Scope 2 or Scope 3)</li>
+        <li><span class="step-num" style="background:var(--mgray);color:var(--navy)">→</span> Enter data in the <strong>yellow input cells</strong> for the new year column</li>
+        <li><span class="step-num" style="background:var(--mgray);color:var(--navy)">→</span> GHG Summary, Net Zero Tracker and Environment KPIs will auto-update</li>
+        <li><span class="step-num" style="background:var(--mgray);color:var(--navy)">→</span> Run <strong>update_all.py</strong> to refresh the embedded Excel charts</li>
+      </ol>
+      <div class="code-block">python update_all.py</div>
+    </div>
+
+    <div class="instruction-card">
+      <h3><span class="step-num">4</span> Making Permanent Updates to This HTML File</h3>
+      <ol>
+        <li><span class="step-num" style="background:var(--mgray);color:var(--navy)">→</span> Open <strong>dashboard.py</strong> in a text editor</li>
+        <li><span class="step-num" style="background:var(--mgray);color:var(--navy)">→</span> Find the <code>GHG_DATA</code> dictionary near the top</li>
+        <li><span class="step-num" style="background:var(--mgray);color:var(--navy)">→</span> Add the new year's values</li>
+        <li><span class="step-num" style="background:var(--mgray);color:var(--navy)">→</span> Run <code>python dashboard.py</code> to regenerate both the Excel and HTML files</li>
+      </ol>
+      <div class="code-block">GHG_DATA = {<br>&nbsp;&nbsp;2024: {"s1": 7463, "s2_loc": 732, "s3": 3696},<br>&nbsp;&nbsp;2025: {"s1": 7452, "s2_loc": 921, "s3": 5249},<br>&nbsp;&nbsp;2026: {"s1": YOUR_VALUE, ...},  ← add here<br>}</div>
+    </div>
+
+    <div class="instruction-card">
+      <h3><span class="step-num">5</span> Understanding the Data</h3>
+      <ol>
+        <li><span class="step-num" style="background:var(--mgray);color:var(--navy)">→</span> All emissions in <strong>tCO2e</strong> (tonnes of CO2 equivalent)</li>
+        <li><span class="step-num" style="background:var(--mgray);color:var(--navy)">→</span> <strong>Scope 1</strong> = direct emissions (gas, vehicles, refrigerants)</li>
+        <li><span class="step-num" style="background:var(--mgray);color:var(--navy)">→</span> <strong>Scope 2</strong> = indirect from purchased electricity and steam</li>
+        <li><span class="step-num" style="background:var(--mgray);color:var(--navy)">→</span> <strong>Scope 3</strong> = value chain (transport, waste, travel, commuting)</li>
+        <li><span class="step-num" style="background:var(--mgray);color:var(--navy)">→</span> Emission factors from <strong>US EPA eGRID 2022</strong> and <strong>IPCC AR6</strong></li>
+        <li><span class="step-num" style="background:var(--mgray);color:var(--navy)">→</span> Grid region: <strong>AZNM Arizona</strong> (0.000386 tCO2e/kWh)</li>
+      </ol>
+    </div>
+
+    <div class="instruction-card">
+      <h3><span class="step-num">6</span> Sharing the Dashboard</h3>
+      <ol>
+        <li><span class="step-num" style="background:var(--mgray);color:var(--navy)">→</span> Send the <strong>.html file</strong> as an email attachment — recipients open it in their browser</li>
+        <li><span class="step-num" style="background:var(--mgray);color:var(--navy)">→</span> No internet connection required — all charts run locally</li>
+        <li><span class="step-num" style="background:var(--mgray);color:var(--navy)">→</span> To print: use browser print (Ctrl+P) and select "Save as PDF"</li>
+        <li><span class="step-num" style="background:var(--mgray);color:var(--navy)">→</span> To host online: upload the .html file to any web server or GitHub Pages</li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="section-title">Data Sources & Emission Factors</div>
+  <table class="data-table">
+    <thead>
+      <tr><th>Source</th><th>Factor</th><th>Unit</th><th>Reference</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Natural Gas</td><td>0.0527</td><td>tCO2e/mmBTU</td><td>US EPA eGRID 2022</td></tr>
+      <tr><td>LPG (Forklifts)</td><td>0.00616</td><td>tCO2e/gallon</td><td>US EPA</td></tr>
+      <tr><td>Gasoline (Vehicles)</td><td>0.00878</td><td>tCO2e/gallon</td><td>US EPA</td></tr>
+      <tr><td>Diesel (Vehicles)</td><td>0.01021</td><td>tCO2e/gallon</td><td>US EPA</td></tr>
+      <tr><td>R404A Refrigerant</td><td>1.779 (GWP 3,922 ÷ 2204.62)</td><td>tCO2e/lb</td><td>IPCC AR6</td></tr>
+      <tr><td>Electricity – AZNM Grid</td><td>0.000386</td><td>tCO2e/kWh</td><td>EPA eGRID AZNM 2022</td></tr>
+      <tr><td>Purchased Steam</td><td>0.0596</td><td>tCO2e/mmBTU</td><td>EPA (80% boiler efficiency)</td></tr>
+      <tr><td>Air Travel (Economy)</td><td>0.000255</td><td>tCO2e/passenger-mile</td><td>UK DEFRA 2022</td></tr>
+      <tr><td>UK National Rail</td><td>0.000035</td><td>tCO2e/mile</td><td>UK DEFRA 2022</td></tr>
+      <tr><td>Passenger Car Commute</td><td>0.000350</td><td>tCO2e/mile</td><td>US EPA</td></tr>
+      <tr><td>Rigid Truck Logistics</td><td>0.000107</td><td>tCO2e/tonne-km</td><td>GHG Protocol</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  Future Technology Sustainability Dashboard &nbsp;|&nbsp; Data: Jay Golden VP Operations, April 2026 &nbsp;|&nbsp; Frameworks: GHG Protocol, CSRD ESRS E1, EPA eGRID 2022
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════
+// DATA STORE
+// ══════════════════════════════════════════════════════
+const COLORS = {
+  navy:   '#262626',
+  green:  '#769500',
+  gold:   '#C2551F',
+  orange: '#C2551F',
+  red:    '#C2551F',
+  blue:   '#007185',
+  purple: '#007185',
+  teal:   '#007185',
+};
+
+let DATA = {
+  years: [2024, 2025],
+  s1:    [7463.269, 7452.292],
+  s2:    [732.250,   920.930],
+  s3:    [3696.038,  5249.479],
+};
+
+function getYearsWithData() {
+  const allYears = [2024,2025,2026,2027,2028,2029,2030];
+  const scopes = ['s1','s2','s3'];
+  return allYears.filter((yr, i) => {
+    if (i < DATA.years.length) return true;
+    return false;
+  });
+}
+
+function getTotals() {
+  return DATA.s1.map((v,i) => v + DATA.s2[i] + DATA.s3[i]);
+}
+
+function fmt(n, decimals=0) {
+  if (n == null || isNaN(n)) return '—';
+  return n.toLocaleString('en-US', {minimumFractionDigits: decimals, maximumFractionDigits: decimals});
+}
+
+// ══════════════════════════════════════════════════════
+// CHART REGISTRY
+// ══════════════════════════════════════════════════════
+const charts = {};
+
+function makeChart(id, config) {
+  if (charts[id]) charts[id].destroy();
+  const ctx = document.getElementById(id);
+  if (!ctx) return;
+  charts[id] = new Chart(ctx, config);
+  return charts[id];
+}
+
+const chartColors = ['#262626', '#769500', '#C2551F', '#007185', '#D9C8B4', '#5a6e00', '#003d47'];
+
+function barConfig(labels, datasets, opts={}) {
+  return {
+    type: 'bar',
+    data: { labels, datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: opts.legendPos || 'top', labels: { font: { size: 11 }, color: COLORS.navy } },
+        tooltip: {
+          callbacks: {
+            label: ctx => ` ${ctx.dataset.label || ''}: ${fmt(ctx.parsed.y, 1)} tCO2e`
+          }
+        }
+      },
+      scales: {
+        x: { ticks: { color: COLORS.navy, font: { size: 11 } }, grid: { display: false } },
+        y: {
+          ticks: { color: COLORS.navy, font: { size: 10 }, callback: v => fmt(v) },
+          grid: { color: '#e5e7eb' },
+          title: { display: true, text: opts.yLabel || 'tCO2e', color: COLORS.navy, font: { size: 11 } }
+        },
+        ...( opts.stacked ? { x: { stacked: true }, y: { stacked: true } } : {} )
+      }
+    }
+  };
+}
+
+function pieConfig(labels, data, title) {
+  return {
+    type: 'doughnut',
+    data: {
+      labels,
+      datasets: [{ data, backgroundColor: chartColors, borderColor: 'white', borderWidth: 2 }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        title: { display: false },
+        legend: {
+          position: 'bottom',
+          labels: { font: { size: 10 }, color: COLORS.navy, padding: 10 }
+        },
+        tooltip: {
+          callbacks: {
+            label: ctx => {
+              const total = ctx.dataset.data.reduce((a,b)=>a+b,0);
+              const pct = (ctx.parsed/total*100).toFixed(1);
+              return ` ${ctx.label}: ${fmt(ctx.parsed,1)} tCO2e (${pct}%)`;
+            }
+          }
+        }
+      }
+    }
+  };
+}
+
+// ══════════════════════════════════════════════════════
+// BUILD ALL CHARTS
+// ══════════════════════════════════════════════════════
+function buildAllCharts() {
+  const totals = getTotals();
+  const yrs    = DATA.years.map(String);
+
+  // ── OVERVIEW ──────────────────────────────────────
+  makeChart('chart-total-ghg', barConfig(yrs, [{
+    label: 'Total GHG (tCO2e)',
+    data: totals,
+    backgroundColor: chartColors,
+    borderRadius: 6,
+  }], { legendPos: 'none' }));
+
+  makeChart('chart-scope-comparison', barConfig(
+    ['Scope 1', 'Scope 2 Location', 'Scope 3'],
+    DATA.years.map((yr,i) => ({
+      label: String(yr),
+      data: [DATA.s1[i], DATA.s2[i], DATA.s3[i]],
+      backgroundColor: chartColors[i],
+      borderRadius: 4,
+    }))
+  ));
+
+  makeChart('chart-pie-2024', pieConfig(
+    ['Scope 1', 'Scope 2 Location', 'Scope 3'],
+    [DATA.s1[0], DATA.s2[0], DATA.s3[0]], '2024'
+  ));
+
+  makeChart('chart-pie-2025', pieConfig(
+    ['Scope 1', 'Scope 2 Location', 'Scope 3'],
+    [DATA.s1[DATA.years.length-1], DATA.s2[DATA.years.length-1], DATA.s3[DATA.years.length-1]], '2025'
+  ));
+
+  // Summary table
+  const tbody = document.getElementById('summary-tbody');
+  if (tbody) {
+    const rows = [
+      ['Scope 1', DATA.s1],
+      ['Scope 2 Location', DATA.s2],
+      ['Scope 3', DATA.s3],
+      ['TOTAL', totals],
+    ];
+    tbody.innerHTML = rows.map(([name, vals], ri) => {
+      const v24 = vals[0] || 0; const v25 = vals[vals.length-1] || 0;
+      const chg = v25 - v24; const pct = ((v25/v24)-1)*100;
+      const cls = ri === 3 ? 'total' : ['scope1','scope2','scope3',''][ri];
+      return `<tr class="${cls}">
+        <td>${name}</td>
+        <td>${fmt(v24,1)}</td>
+        <td>${fmt(v25,1)}</td>
+        <td style="color:${chg>0?COLORS.red:COLORS.green}">${chg>0?'▲':'▼'} ${fmt(Math.abs(chg),1)}</td>
+        <td style="color:${pct>0?COLORS.red:COLORS.green}">${chg>0?'+':''}${pct.toFixed(1)}%</td>
+      </tr>`;
+    }).join('');
+  }
+
+  // ── SCOPE 1 ────────────────────────────────────────
+  const s1cats = ['Natural Gas', 'Equipment', 'Vehicles', 'Refrigerants (R404A)'];
+  const s1_2024 = [236.644, 94.714, 15.945, 7115.966];
+  const s1_2025 = [185.046, 94.714, 56.567, 7115.966];
+
+  makeChart('chart-s1-categories', barConfig(s1cats, [
+    { label: '2024', data: s1_2024, backgroundColor: COLORS.navy, borderRadius: 4 },
+    { label: '2025', data: s1_2025, backgroundColor: COLORS.green, borderRadius: 4 },
+  ]));
+
+  makeChart('chart-s1-pie', pieConfig(s1cats, s1_2025, '2025 Scope 1'));
+
+  // ── SCOPE 2 ────────────────────────────────────────
+  const s2fac = ['HQ', 'Fab Plant', 'Warehouse', 'Steam'];
+  const s2_fac_2024 = [108.08, 296.062, 30.108, 298.0];
+  const s2_fac_2025 = [98.816, 379.052, 25.862, 417.2];
+
+  makeChart('chart-s2-pie-2024', pieConfig(s2fac, s2_fac_2024, '2024 Scope 2'));
+  makeChart('chart-s2-pie-2025', pieConfig(s2fac, s2_fac_2025, '2025 Scope 2'));
+
+  makeChart('chart-electricity', barConfig(
+    ['HQ', 'Fab Plant', 'Warehouse'],
+    [
+      { label: '2024', data: [280, 767, 78], backgroundColor: COLORS.navy, borderRadius: 4 },
+      { label: '2025', data: [256, 982, 67], backgroundColor: COLORS.green, borderRadius: 4 },
+    ],
+    { yLabel: 'MWh (thousands)' }
+  ));
+
+  makeChart('chart-s2-loc-mkt', barConfig(
+    yrs,
+    [
+      { label: 'Location-Based', data: DATA.s2, backgroundColor: COLORS.navy, borderRadius: 4 },
+      { label: 'Market-Based (after RECs)', data: DATA.s2.map(v => v * 0.95), backgroundColor: COLORS.green, borderRadius: 4 },
+    ]
+  ));
+
+  // ── SCOPE 3 ────────────────────────────────────────
+  const s3cats = ['Cat 4: Transport', 'Cat 5: Waste', 'Cat 6: Travel', 'Cat 7: Commuting'];
+  const s3_2024 = [2802.660, 269.766, 38.355, 585.257];
+  const s3_2025 = [4490.992, 259.840, 51.156, 447.491];
+
+  makeChart('chart-s3-pie-2024', pieConfig(s3cats, s3_2024, '2024 Scope 3'));
+  makeChart('chart-s3-pie-2025', pieConfig(s3cats, s3_2025, '2025 Scope 3'));
+
+  makeChart('chart-s3-bar', barConfig(s3cats, [
+    { label: '2024', data: s3_2024, backgroundColor: COLORS.navy, borderRadius: 4 },
+    { label: '2025', data: s3_2025, backgroundColor: COLORS.green, borderRadius: 4 },
+  ]));
+
+  // ── INTENSITY ──────────────────────────────────────
+  const revenue  = DATA.years.map(yr => yr === 2024 ? 280 : 360);
+  const units    = DATA.years.map(yr => yr === 2024 ? 2.5 : 6.2);
+  const ftes     = DATA.years.map(yr => yr === 2024 ? 250 : 290);
+  const intRev   = totals.map((t,i) => t / revenue[i]);
+  const intUnits = totals.map((t,i) => t / units[i]);
+  const intFTE   = totals.map((t,i) => t / ftes[i]);
+
+  makeChart('chart-int-rev',   barConfig(yrs, [{ label: 'tCO2e/$M Revenue', data: intRev,   backgroundColor: chartColors, borderRadius: 6 }], { legendPos: 'none', yLabel: 'tCO2e/$M' }));
+  makeChart('chart-int-units', barConfig(yrs, [{ label: 'tCO2e/M Units',    data: intUnits, backgroundColor: chartColors, borderRadius: 6 }], { legendPos: 'none', yLabel: 'tCO2e/M units' }));
+  makeChart('chart-int-fte',   barConfig(yrs, [{ label: 'tCO2e/FTE',        data: intFTE,   backgroundColor: chartColors, borderRadius: 6 }], { legendPos: 'none', yLabel: 'tCO2e/FTE' }));
+
+  // ── NET ZERO ──────────────────────────────────────
+  const baseYr  = 2024;
+  const baseEms = totals[0];
+  const targetYr = 2050;
+  const allYrs = [];
+  for (let y = baseYr; y <= targetYr; y++) allYrs.push(y);
+
+  const required = allYrs.map(y =>
+    Math.max(0, baseEms * (targetYr - y) / (targetYr - baseYr))
+  );
+
+  const actuals = allYrs.map(y => {
+    const idx = DATA.years.indexOf(y);
+    return idx >= 0 ? totals[idx] : null;
+  });
+
+  makeChart('chart-netzero', {
+    type: 'line',
+    data: {
+      labels: allYrs.map(String),
+      datasets: [
+        {
+          label: 'Required Pathway (Linear to Net Zero)',
+          data: required,
+          borderColor: COLORS.green,
+          backgroundColor: 'rgba(26,107,58,0.1)',
+          borderWidth: 2,
+          fill: true,
+          pointRadius: 0,
+          tension: 0.1,
+        },
+        {
+          label: 'Actual GHG Emissions',
+          data: actuals,
+          borderColor: COLORS.red,
+          backgroundColor: COLORS.red,
+          borderWidth: 3,
+          pointRadius: 6,
+          pointHoverRadius: 8,
+          spanGaps: false,
+          tension: 0,
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'top', labels: { font: { size: 11 }, color: COLORS.navy } },
+        tooltip: {
+          callbacks: {
+            label: ctx => ` ${ctx.dataset.label}: ${fmt(ctx.parsed.y, 0)} tCO2e`
+          }
+        }
+      },
+      scales: {
+        x: {
+          ticks: { color: COLORS.navy, maxTicksLimit: 14, font: { size: 10 } },
+          grid: { display: false }
+        },
+        y: {
+          ticks: { color: COLORS.navy, callback: v => fmt(v) },
+          grid: { color: '#e5e7eb' },
+          title: { display: true, text: 'tCO2e', color: COLORS.navy }
+        }
+      }
+    }
+  });
+
+  // ── UPDATE KPI CARDS ───────────────────────────────
+  const lastIdx = DATA.years.length - 1;
+  const tot0 = totals[0]; const totL = totals[lastIdx];
+  const yoyPct = ((totL/tot0)-1)*100;
+  document.getElementById('kpi-total-2024').textContent = fmt(tot0);
+  document.getElementById('kpi-total-2025').textContent = fmt(totL);
+  document.getElementById('kpi-yoy').textContent = `${yoyPct>0?'▲ +':'▼ '}${Math.abs(yoyPct).toFixed(1)}% vs ${DATA.years[0]}`;
+  document.getElementById('kpi-yoy').className = 'kpi-change ' + (yoyPct > 0 ? 'up' : 'down');
+  document.getElementById('kpi-s1').textContent = fmt(DATA.s1[lastIdx]);
+}
+
+// ══════════════════════════════════════════════════════
+// UPDATE FROM INPUT FIELDS
+// ══════════════════════════════════════════════════════
+function updateAllCharts() {
+  const allYears = [2024,2025,2026,2027,2028,2029,2030];
+  const newYears = [], newS1 = [], newS2 = [], newS3 = [];
+
+  allYears.forEach(yr => {
+    const s1v = parseFloat(document.getElementById(`inp-s1-${yr}`)?.value);
+    const s2v = parseFloat(document.getElementById(`inp-s2-${yr}`)?.value);
+    const s3v = parseFloat(document.getElementById(`inp-s3-${yr}`)?.value);
+    if (!isNaN(s1v) || !isNaN(s2v) || !isNaN(s3v)) {
+      newYears.push(yr);
+      newS1.push(isNaN(s1v) ? 0 : s1v);
+      newS2.push(isNaN(s2v) ? 0 : s2v);
+      newS3.push(isNaN(s3v) ? 0 : s3v);
+    }
+  });
+
+  if (newYears.length > 0) {
+    DATA.years = newYears;
+    DATA.s1 = newS1;
+    DATA.s2 = newS2;
+    DATA.s3 = newS3;
+    buildAllCharts();
+    alert(`✅ Charts updated with data for ${newYears.length} year(s): ${newYears.join(', ')}`);
+  } else {
+    alert('No data entered. Please enter at least one value.');
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════════════════════
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// ══════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════
+window.addEventListener('load', buildAllCharts);
+</script>
+</body>
+</html>
 
